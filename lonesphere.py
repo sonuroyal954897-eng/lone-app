@@ -1,6 +1,6 @@
 
 # 1. DATABASE INITIALIZATION
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS  # <-- Line 2
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -62,10 +62,8 @@ def calculate_interest_rate(income, credit_score):
 
 @app.route('/')
 def home():
-    return jsonify({
-        "status": "Server Live",
-        "message": "Welcome to Loan Management API System"
-    })
+  return send_from_directory('.', 'index.html')
+    
 
 # Register User (Aadhaar, PAN, Email, Mobile Update)
 @app.route('/api/users/register', methods=['POST'])
