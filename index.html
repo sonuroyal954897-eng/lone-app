@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Management Portal</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #f4f6f8; margin: 0; padding: 20px; }
+        .container { max-width: 550px; margin: 0 auto; }
+        .card { background: #ffffff; padding: 24px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        h2 { color: #1e293b; margin: 0 0 16px 0; font-size: 20px; border-bottom: 2px solid #22c55e; padding-bottom: 6px; }
+        label { font-weight: 600; font-size: 13px; color: #475569; display: block; margin-top: 10px; }
+        input { width: 100%; padding: 12px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; outline: none; }
+        input:focus { border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+        
+        /* Fast CSS Formatting rules (Zero Lag) */
+        .capitalize-input { text-transform: capitalize; }
+        .uppercase-input { text-transform: uppercase; }
+
+        button { width: 100%; background-color: #22c55e; color: white; padding: 14px; margin-top: 18px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: #16a34a; }
+        
+        .result-box { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-size: 14px; line-height: 1.4; }
+        .success { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .error { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="text-align: center; color: #0f172a; margin-bottom: 20px;">🚀 Loan Application Portal</h1>
+
+    <!-- 1. USER REGISTRATION FORM -->
+    <div class="card">
+        <h2>1. User Registration (KYC)</h2>
+        
+        <label>Full Name</label>
+        <input type="text" id="name" class="capitalize-input" placeholder="e.g. Sonu Kumar" autocomplete="off">
+
+        <label>Mobile Number</label>
+        <input type="text" id="phone" placeholder="10 Digit Mobile Number" autocomplete="off">
+
+        <label>Email ID</label>
+        <input type="email" id="email" placeholder="e.g. name@example.com" autocomplete="off">
+
+        <label>PAN Card Number</label>
+        <input type="text" id="pan" class="uppercase-input" placeholder="e.g. ABCDE1234F" autocomplete="off">
+
+        <label>Aadhaar Number</label>
+        <input type="text" id="aadhaar" class="uppercase-input" placeholder="12 Digit Aadhaar Number" autocomplete="off">
+
+        <label>Monthly Income (₹)</label>
+        <input type="number" id="income" placeholder="e.g. 35000">
+
+        <button type="button" onclick="registerUser()">Register User</button>
+        <div id="regResult" class="result-box"></div>
+    </div>
+
+    <!-- 2. APPLY FOR LOAN FORM -->
+    <div class="card">
+        <h2>2. Apply For Loan</h2>
+        
+        <label>User ID</label>
+        <input type="number" id="userId" placeholder="User ID">
+
+        <label>Loan Amount (₹)</label>
+        <input type="number" id="amount" placeholder="e.g. 50000">
+
+        <label>Tenure (Months)</label>
+        <input type="number" id="tenure" placeholder="e.g. 12">
+
+        <button type="button" onclick="applyLoan()">Apply Loan</button>
+        <div id="loanResult" class="result-box"></div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = 'http://127.0.0.1:5000';
+
+    // Helper to format string in Title Case (First letter Capital, rest small)
+    function toTitleCase(str) {
+        return str.toLowerCase().replace(/(?:^|\s)\w/g, function(match) {
+            return match.toUpperCase();
+        });
+    }
+
+    // Fast Register Function
+    async function registerUser() {
+        const div = document.getElementById('regResult');
+        div.style.display = 'block';
+        div.className = 'result-box success';
+        div.innerHTML = '⌛ Registering user...';
+
+        try {
+            const rawName = document.getElementById('name').value.trim();
+            const data = {
+                name: toTitleCase(rawName),
+                phone: document.getElementById('phone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                pan: document.getElementById('pan').value.trim().toUpperCase(),
+                aadhaar_no: document.getElementById('aadhaar').value.trim().toUpperCase(),
+                monthly_income: parseFloat(document.getElementById('income').value) || 0
+            };
+
+            const res = await fetch(`${BASE_URL}/api/users/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (res.ok) {
+                div.className = 'result-box success';
+                div.innerHTML = `✅ <b>Registration Successful!</b><br>User ID: <b>${result.user_id}</b>`;
+                document.getElementById('userId').value = result.user_id; // Auto fill User ID below
+            } else {
+                div.className = 'result-box error';
+                div.innerHTML = `❌ <b>Error:</b> ${result.error || 'Registration failed'}`;
+            }
+        } catch (err) {
+            div.className = 'result-box error';
+            div.innerHTML = `❌ <b>Connection Error:</b> Python server (<code>lonesphere.py</code>) band hai! Pehle server chalu karein.`;
+        }
+    }
+
+    // Fast Apply Loan Function
+    async function applyLoan() {
+        const div = document.getElementById('loanResult');
+        div.style.display = 'block';
+        div.className = 'result-box success';
+        div.innerHTML = '⌛ Processing loan...';
+
+        try {
+            const data = {
+                user_id: parseInt(document.getElementById('userId').value),
+                amount: parseFloat(document.getElementById('amount').value),
+                tenure_months: parseInt(document.getElementById('tenure').value)
+            };
+
+            const res = await fetch(`${BASE_URL}/api/loans/apply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (res.ok) {
+                div.className = 'result-box success';
+                div.innerHTML = `🎉 <b>Loan Approved!</b><br>Loan ID: <b>${result.loan_id}</b><br>Monthly EMI: <b>₹${result.monthly_emi}</b>`;
+            } else {
+                div.className = 'result-box error';
+                div.innerHTML = `❌ <b>Error:</b> ${result.error || 'Loan application failed'}`;
+            }
+        } catch (err) {
+            div.className = 'result-box error';
+            div.innerHTML = `❌ <b>Connection Error:</b> Python server band hai!`;
+        }
+    }
+</script>
+
+</body>
+</html>
